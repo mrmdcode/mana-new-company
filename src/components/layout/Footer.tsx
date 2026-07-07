@@ -113,10 +113,20 @@ export default function Footer({ logoUrl }: { logoUrl?: string | null }) {
 
           <div className="flex items-center gap-3">
             <div className="flex h-16 w-16 flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 text-center text-[10px] leading-tight text-slate-400 dark:border-white/10 dark:text-slate-600">
-              جای نماد
-              <br />
-              اینماد
-            </div>
+              <a
+                  referrerPolicy="origin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href="https://trustseal.enamad.ir/?id=609043&Code=xk32E9Ch2RWXftT7C8m2iT4TcvTxv6U5"
+                >
+                  <img
+                    referrerPolicy="origin"
+                    src="https://trustseal.enamad.ir/logo.aspx?id=609043&Code=xk32E9Ch2RWXftT7C8m2iT4TcvTxv6U5"
+                    alt="نماد اعتماد الکترونیکی"
+                    className="h-16 w-16 cursor-pointer object-contain"
+                  />
+                </a>         
+               </div>
             <div className="flex h-16 w-16 flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 text-center text-[10px] leading-tight text-slate-400 dark:border-white/10 dark:text-slate-600">
               جای نماد
               <br />

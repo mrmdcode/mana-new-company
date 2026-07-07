@@ -11,8 +11,8 @@ export const siteConfig = {
     phone: "051-91002885",
     mobile: "0938-951-2885",
     email: "info@asrarnahan.ir",
-    address: "تهران، خیابان آزادی، برج آریا، طبقه ۴",
-    workHours: "شنبه تا چهارشنبه ۹ الی ۱۸",
+    address: "خراسان رضوی ، سبزوار ، میدان حسین فهمیده ، بلوار شهدای کوشک ، کوشک ۱۹ ، پلاک ۳۲",
+    workHours: "شنبه تا پنجشنبه ۸ الی ۲۰:۳۰",
   },
   social: {
     instagram: "https://instagram.com/asrarnahan.ir",

@@ -3,7 +3,7 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "8006:3000"
     environment:
       - ADMIN_DEFAULT_PASSWORD=${ADMIN_DEFAULT_PASSWORD:-}
       - ADMIN_SESSION_SECRET=${ADMIN_SESSION_SECRET:-}
