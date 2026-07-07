@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { Vazirmatn } from "next/font/google";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { siteConfig } from "@/data/site";
 import "./globals.css";
 
@@ -85,9 +83,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        {children}
       </body>
     </html>
   );

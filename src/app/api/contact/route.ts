@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { createMessage, getSetting, markMessageForwarded } from "@/lib/db";
+import { sendBaleMessage } from "@/lib/bale";
 
 type ContactPayload = {
   name?: string;
   phone?: string;
+  email?: string;
   message?: string;
 };
 
@@ -16,8 +19,35 @@ export async function POST(request: Request) {
     );
   }
 
-  // TODO: اتصال به سرویس ایمیل/پیامک واقعی از طریق متغیرهای محیطی انجام شود.
-  console.log("New contact request:", body);
+  const record = createMessage({
+    name: body.name,
+    phone: body.phone,
+    email: body.email?.trim() ?? "",
+    message: body.message,
+  });
+
+  const token = getSetting("bale_bot_token");
+  const chatId = getSetting("bale_chat_id");
+
+  if (token && chatId) {
+    const text = [
+      "پیام جدید از فرم تماس سایت",
+      "",
+      `نام: ${record.name}`,
+      `تلفن: ${record.phone}`,
+      `ایمیل: ${record.email || "-"}`,
+      "",
+      "پیام:",
+      record.message,
+    ].join("\n");
+
+    try {
+      await sendBaleMessage(token, chatId, text);
+      markMessageForwarded(record.id);
+    } catch (error) {
+      console.error("ارسال پیام به بله ناموفق بود:", error);
+    }
+  }
 
   return NextResponse.json({ success: true });
 }

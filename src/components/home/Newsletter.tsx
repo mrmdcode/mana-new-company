@@ -1,9 +1,12 @@
 import Container from "@/components/ui/Container";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { Calendar } from "lucide-react";
-import { news } from "@/data/news";
+import { listNews } from "@/lib/db";
+import NewsletterSubscribeForm from "./NewsletterSubscribeForm";
 
 export default function Newsletter() {
+  const news = listNews(10);
+
   return (
     <section
       id="news"
@@ -16,10 +19,12 @@ export default function Newsletter() {
           description="تازه‌ترین رویدادها، همکاری‌ها و به‌روزرسانی‌های محافظ اسرار نهان آریا را دنبال کنید."
         />
 
-        <div className="mt-14 grid gap-4 lg:grid-cols-2">
+        <NewsletterSubscribeForm />
+
+        <div className="mt-10 grid gap-4 lg:grid-cols-2">
           {news.map((item) => (
             <div
-              key={item.title}
+              key={item.id}
               className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition hover:border-teal-200 hover:shadow-md dark:border-white/5 dark:bg-white/[0.03] dark:hover:border-teal-500/30"
             >
               <div className="flex shrink-0 flex-col items-center justify-center rounded-xl bg-teal-50 px-3 py-2 text-teal-700 dark:bg-teal-500/10 dark:text-teal-400">

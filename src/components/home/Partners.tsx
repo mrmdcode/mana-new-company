@@ -1,9 +1,11 @@
 import Container from "@/components/ui/Container";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { Building2 } from "lucide-react";
-import { partners } from "@/data/partners";
+import { listPartners } from "@/lib/db";
 
 export default function Partners() {
+  const partners = listPartners();
+
   return (
     <section
       id="partners"
@@ -19,7 +21,7 @@ export default function Partners() {
         <div className="mt-14 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {partners.map((partner) => (
             <div
-              key={partner.name}
+              key={partner.id}
               className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-8 text-center transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/60 dark:border-white/5 dark:bg-white/[0.03] dark:hover:shadow-none"
             >
               <span className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400">

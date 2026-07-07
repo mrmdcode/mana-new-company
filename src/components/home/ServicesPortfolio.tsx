@@ -1,9 +1,11 @@
 import Container from "@/components/ui/Container";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ExternalLink } from "lucide-react";
-import { portfolio } from "@/data/portfolio";
+import { listPortfolio } from "@/lib/db";
 
 export default function ServicesPortfolio() {
+  const portfolio = listPortfolio();
+
   return (
     <section
       id="portfolio"
@@ -19,7 +21,7 @@ export default function ServicesPortfolio() {
         <div className="mt-14 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
           {portfolio.map((item) => (
             <article
-              key={item.title}
+              key={item.id}
               className="group overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/70 dark:border-white/5 dark:bg-white/[0.03] dark:hover:shadow-none"
             >
               <div
