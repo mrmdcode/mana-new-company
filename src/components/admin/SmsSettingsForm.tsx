@@ -6,6 +6,8 @@ import { Loader2, Send } from "lucide-react";
 type SmsSettings = {
   apiKeySet: boolean;
   apiKeyPreview: string;
+  apiKeySource: "settings" | "env" | "none";
+  sender: string;
   contactTemplate: string;
   newsletterTemplate: string;
 };
@@ -14,6 +16,8 @@ export default function SmsSettingsForm({ initialSettings }: { initialSettings: 
   const [apiKey, setApiKey] = useState("");
   const [keyPreview, setKeyPreview] = useState(initialSettings.apiKeyPreview);
   const [keySet, setKeySet] = useState(initialSettings.apiKeySet);
+  const [keySource, setKeySource] = useState(initialSettings.apiKeySource);
+  const [sender, setSender] = useState(initialSettings.sender);
   const [contactTemplate, setContactTemplate] = useState(initialSettings.contactTemplate);
   const [newsletterTemplate, setNewsletterTemplate] = useState(initialSettings.newsletterTemplate);
   const [saving, setSaving] = useState(false);
@@ -33,7 +37,7 @@ export default function SmsSettingsForm({ initialSettings }: { initialSettings: 
       const res = await fetch("/api/admin/settings/sms", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey, contactTemplate, newsletterTemplate }),
+        body: JSON.stringify({ apiKey, sender, contactTemplate, newsletterTemplate }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "ذخیره تنظیمات ناموفق بود.");
@@ -41,6 +45,7 @@ export default function SmsSettingsForm({ initialSettings }: { initialSettings: 
       setMessage("تنظیمات پیامک ذخیره شد.");
       if (apiKey) {
         setKeySet(true);
+        setKeySource("settings");
         setKeyPreview(`${apiKey.slice(0, 4)}••••${apiKey.slice(-4)}`);
         setApiKey("");
       }
@@ -99,9 +104,26 @@ export default function SmsSettingsForm({ initialSettings }: { initialSettings: 
       />
       {keySet && (
         <p className="mt-1 text-xs text-slate-400">
-          کلید فعلی ذخیره شده است. برای تغییر، کلید جدید را وارد کنید.
+          {keySource === "env"
+            ? "کلید فعلی از متغیر محیطی سرور (KAVENEGAR_API_KEY) خوانده شده است. برای تغییر، کلید جدید را همین‌جا وارد کنید تا در پنل ذخیره شود."
+            : "کلید فعلی ذخیره شده است. برای تغییر، کلید جدید را وارد کنید."}
         </p>
       )}
+
+      <label className="mt-4 block text-sm font-medium text-slate-700 dark:text-slate-300">
+        شماره خط ارسال‌کننده (اختیاری)
+      </label>
+      <input
+        type="text"
+        dir="ltr"
+        value={sender}
+        onChange={(e) => setSender(e.target.value)}
+        placeholder="مثال: 9982003490"
+        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 dark:border-white/10 dark:bg-white/5 dark:text-white"
+      />
+      <p className="mt-1 text-xs text-slate-400">
+        اگر خالی بماند، از خط پیش‌فرض حساب کاوه‌نگار شما استفاده می‌شود.
+      </p>
 
       <label className="mt-4 block text-sm font-medium text-slate-700 dark:text-slate-300">
         متن پیامک برای فرم تماس با ما

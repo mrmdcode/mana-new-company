@@ -2,12 +2,12 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import SettingsForm from "@/components/admin/SettingsForm";
 import LogoUploadForm from "@/components/admin/LogoUploadForm";
 import SmsSettingsForm from "@/components/admin/SmsSettingsForm";
-import { getSetting, getSiteLogo } from "@/lib/db";
+import { getKavenegarConfig, getSetting, getSiteLogo } from "@/lib/db";
 import { DEFAULT_CONTACT_SMS_TEMPLATE, DEFAULT_NEWSLETTER_SMS_TEMPLATE } from "@/data/sms-templates";
 
 export default function AdminSettingsPage() {
   const token = getSetting("bale_bot_token") ?? "";
-  const smsKey = getSetting("kavenegar_api_key") ?? "";
+  const { apiKey: smsKey, sender: smsSender, apiKeySource } = getKavenegarConfig();
 
   return (
     <div>
@@ -31,8 +31,10 @@ export default function AdminSettingsPage() {
       <div className="mt-6">
         <SmsSettingsForm
           initialSettings={{
-            apiKeySet: smsKey.length > 0,
+            apiKeySet: Boolean(smsKey),
             apiKeyPreview: smsKey ? `${smsKey.slice(0, 4)}••••${smsKey.slice(-4)}` : "",
+            apiKeySource,
+            sender: smsSender ?? "",
             contactTemplate: getSetting("sms_contact_template") || DEFAULT_CONTACT_SMS_TEMPLATE,
             newsletterTemplate: getSetting("sms_newsletter_template") || DEFAULT_NEWSLETTER_SMS_TEMPLATE,
           }}

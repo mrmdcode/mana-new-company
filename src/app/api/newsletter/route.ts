@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSubscriber, getSetting } from "@/lib/db";
+import { createSubscriber, getKavenegarConfig, getSetting } from "@/lib/db";
 import { sendSms } from "@/lib/kavenegar";
 import { DEFAULT_NEWSLETTER_SMS_TEMPLATE } from "@/data/sms-templates";
 
@@ -20,11 +20,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "این شماره قبلاً در خبرنامه عضو شده است." }, { status: 409 });
   }
 
-  const kavenegarKey = getSetting("kavenegar_api_key");
+  const { apiKey: kavenegarKey, sender } = getKavenegarConfig();
   if (kavenegarKey) {
     const template = getSetting("sms_newsletter_template") || DEFAULT_NEWSLETTER_SMS_TEMPLATE;
     try {
-      await sendSms(kavenegarKey, normalized, template);
+      await sendSms(kavenegarKey, normalized, template, sender);
     } catch (error) {
       console.error("ارسال پیامک خوش‌آمدگویی خبرنامه ناموفق بود:", error);
     }

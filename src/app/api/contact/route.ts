@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createMessage, getSetting, markMessageForwarded } from "@/lib/db";
+import { createMessage, getKavenegarConfig, getSetting, markMessageForwarded } from "@/lib/db";
 import { sendBaleMessage } from "@/lib/bale";
 import { sendSms } from "@/lib/kavenegar";
 import { DEFAULT_CONTACT_SMS_TEMPLATE } from "@/data/sms-templates";
@@ -51,12 +51,12 @@ export async function POST(request: Request) {
     }
   }
 
-  const kavenegarKey = getSetting("kavenegar_api_key");
+  const { apiKey: kavenegarKey, sender } = getKavenegarConfig();
   if (kavenegarKey) {
     const template = getSetting("sms_contact_template") || DEFAULT_CONTACT_SMS_TEMPLATE;
     const text = template.replace(/\{name\}/g, record.name);
     try {
-      await sendSms(kavenegarKey, record.phone, text);
+      await sendSms(kavenegarKey, record.phone, text, sender);
     } catch (error) {
       console.error("ارسال پیامک تشکر به مخاطب ناموفق بود:", error);
     }

@@ -2,10 +2,16 @@ type KavenegarResponse = {
   return?: { status?: number; message?: string };
 };
 
-export async function sendSms(apiKey: string, receptor: string, message: string): Promise<void> {
+export async function sendSms(
+  apiKey: string,
+  receptor: string,
+  message: string,
+  sender?: string
+): Promise<void> {
   const url = new URL(`https://api.kavenegar.com/v1/${apiKey}/sms/send.json`);
   url.searchParams.set("receptor", receptor);
   url.searchParams.set("message", message);
+  if (sender) url.searchParams.set("sender", sender);
 
   const res = await fetch(url.toString(), { signal: AbortSignal.timeout(10_000) });
   const body = (await res.json().catch(() => null)) as KavenegarResponse | null;

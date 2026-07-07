@@ -134,6 +134,25 @@ export function clearSiteLogo(): void {
   setSetting("site_logo", "");
 }
 
+export type KavenegarConfig = {
+  apiKey?: string;
+  sender?: string;
+  apiKeySource: "settings" | "env" | "none";
+};
+
+// A key/sender saved from the admin panel always wins; the KAVENEGAR_API_KEY
+// and KAVENEGAR_SENDER env vars are just the initial default for a fresh install.
+export function getKavenegarConfig(): KavenegarConfig {
+  const dbKey = getSetting("kavenegar_api_key");
+  const envKey = process.env.KAVENEGAR_API_KEY;
+
+  return {
+    apiKey: dbKey || envKey || undefined,
+    sender: getSetting("kavenegar_sender") || process.env.KAVENEGAR_SENDER || undefined,
+    apiKeySource: dbKey ? "settings" : envKey ? "env" : "none",
+  };
+}
+
 export function getOrCreateAdminPasswordHash(): string {
   let hash = getSetting("admin_password_hash");
   if (!hash) {
