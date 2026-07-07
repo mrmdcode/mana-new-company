@@ -1,0 +1,44 @@
+# نمونه کانفیگ Nginx برای فوروارد کردن ترافیک به کانتینر Next.js
+# این فایل را در /etc/nginx/sites-available/nahanarya.conf کپی کنید،
+# دامنه و مسیر گواهی SSL را با مقادیر واقعی خودتان جایگزین کنید،
+# سپس با یک لینک نمادین آن را در sites-enabled فعال کنید:
+#   ln -s /etc/nginx/sites-available/nahanarya.conf /etc/nginx/sites-enabled/
+#   nginx -t && systemctl reload nginx
+#
+# گواهی SSL را می‌توانید با certbot بگیرید:
+#   certbot --nginx -d example.com -d www.example.com
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name example.com www.example.com;
+
+    # ریدایرکت همه درخواست‌های HTTP به HTTPS
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name example.com www.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+    # آپلود لوگو از پنل مدیریت تا ۵۰۰ کیلوبایت است؛ کمی حاشیه امن می‌گذاریم
+    client_max_body_size 2m;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # این هدر برای next.js لازم نیست ولی برای لاگ/دیباگ مفید است
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}

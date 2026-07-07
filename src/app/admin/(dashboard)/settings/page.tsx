@@ -1,13 +1,19 @@
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import SettingsForm from "@/components/admin/SettingsForm";
-import { getSetting } from "@/lib/db";
+import LogoUploadForm from "@/components/admin/LogoUploadForm";
+import { getSetting, getSiteLogo } from "@/lib/db";
 
 export default function AdminSettingsPage() {
   const token = getSetting("bale_bot_token") ?? "";
 
   return (
     <div>
-      <AdminPageHeader title="تنظیمات" description="اتصال ربات بله و تغییر رمز عبور پنل مدیریت." />
+      <AdminPageHeader title="تنظیمات" description="لوگوی سایت، اتصال ربات بله و تغییر رمز عبور پنل مدیریت." />
+
+      <div className="mb-6">
+        <LogoUploadForm initialLogo={getSiteLogo() ?? null} />
+      </div>
+
       <SettingsForm
         initialSettings={{
           baleBotTokenSet: token.length > 0,

@@ -12,20 +12,25 @@ const socials = [
   { name: "linkedin" as const, href: siteConfig.social.linkedin, label: "لینکدین" },
 ];
 
-export default function Footer() {
+export default function Footer({ logoUrl }: { logoUrl?: string | null }) {
   return (
     <footer className="border-t border-slate-100 bg-slate-50 dark:border-white/5 dark:bg-slate-950">
       <Container className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 text-white">
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
-                <path
-                  d="M12 6.5 17 8.8v3.3c0 3.4-2 5.9-5 7.1-3-1.2-5-3.7-5-7.1V8.8L12 6.5Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </span>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded data URL, not an optimizable asset
+              <img src={logoUrl} alt={siteConfig.name} className="h-9 w-9 rounded-xl object-contain" />
+            ) : (
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 text-white">
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                  <path
+                    d="M12 6.5 17 8.8v3.3c0 3.4-2 5.9-5 7.1-3-1.2-5-3.7-5-7.1V8.8L12 6.5Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+            )}
             <span className="text-lg font-extrabold text-slate-900 dark:text-white">
               {siteConfig.name}
             </span>

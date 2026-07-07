@@ -121,6 +121,18 @@ export function setSetting(key: string, value: string): void {
   ).run(key, value);
 }
 
+export function getSiteLogo(): string | undefined {
+  return getSetting("site_logo") || undefined;
+}
+
+export function setSiteLogo(dataUrl: string): void {
+  setSetting("site_logo", dataUrl);
+}
+
+export function clearSiteLogo(): void {
+  setSetting("site_logo", "");
+}
+
 export function getOrCreateAdminPasswordHash(): string {
   let hash = getSetting("admin_password_hash");
   if (!hash) {

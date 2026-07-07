@@ -7,7 +7,7 @@ import Container from "@/components/ui/Container";
 import { mainNav } from "@/data/nav";
 import { siteConfig } from "@/data/site";
 
-export default function Header() {
+export default function Header({ logoUrl }: { logoUrl?: string | null }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -28,19 +28,28 @@ export default function Header() {
     >
       <Container className="flex h-16 items-center justify-between sm:h-20">
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-md shadow-teal-500/20">
-            <svg viewBox="0 0 24 24" className="h-5.5 w-5.5" fill="none">
-              <path
-                d="M12 2.5 20 6v6c0 5.2-3.4 8.9-8 10.5-4.6-1.6-8-5.3-8-10.5V6l8-3.5Z"
-                fill="currentColor"
-                fillOpacity="0.25"
-              />
-              <path
-                d="M12 6.5 17 8.8v3.3c0 3.4-2 5.9-5 7.1-3-1.2-5-3.7-5-7.1V8.8L12 6.5Z"
-                fill="currentColor"
-              />
-            </svg>
-          </span>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- admin-uploaded data URL, not an optimizable asset
+            <img
+              src={logoUrl}
+              alt={siteConfig.shortName}
+              className="h-10 w-10 rounded-xl object-contain"
+            />
+          ) : (
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 text-white shadow-md shadow-teal-500/20">
+              <svg viewBox="0 0 24 24" className="h-5.5 w-5.5" fill="none">
+                <path
+                  d="M12 2.5 20 6v6c0 5.2-3.4 8.9-8 10.5-4.6-1.6-8-5.3-8-10.5V6l8-3.5Z"
+                  fill="currentColor"
+                  fillOpacity="0.25"
+                />
+                <path
+                  d="M12 6.5 17 8.8v3.3c0 3.4-2 5.9-5 7.1-3-1.2-5-3.7-5-7.1V8.8L12 6.5Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </span>
+          )}
           <span className="flex flex-col leading-tight">
             <span className="text-base font-extrabold text-slate-900 sm:text-lg dark:text-white">
               {siteConfig.shortName}
