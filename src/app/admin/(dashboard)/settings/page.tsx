@@ -1,14 +1,20 @@
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import SettingsForm from "@/components/admin/SettingsForm";
 import LogoUploadForm from "@/components/admin/LogoUploadForm";
+import SmsSettingsForm from "@/components/admin/SmsSettingsForm";
 import { getSetting, getSiteLogo } from "@/lib/db";
+import { DEFAULT_CONTACT_SMS_TEMPLATE, DEFAULT_NEWSLETTER_SMS_TEMPLATE } from "@/data/sms-templates";
 
 export default function AdminSettingsPage() {
   const token = getSetting("bale_bot_token") ?? "";
+  const smsKey = getSetting("kavenegar_api_key") ?? "";
 
   return (
     <div>
-      <AdminPageHeader title="تنظیمات" description="لوگوی سایت، اتصال ربات بله و تغییر رمز عبور پنل مدیریت." />
+      <AdminPageHeader
+        title="تنظیمات"
+        description="لوگوی سایت، اتصال ربات بله، پیامک خودکار و تغییر رمز عبور پنل مدیریت."
+      />
 
       <div className="mb-6">
         <LogoUploadForm initialLogo={getSiteLogo() ?? null} />
@@ -21,6 +27,17 @@ export default function AdminSettingsPage() {
           baleChatId: getSetting("bale_chat_id") ?? "",
         }}
       />
+
+      <div className="mt-6">
+        <SmsSettingsForm
+          initialSettings={{
+            apiKeySet: smsKey.length > 0,
+            apiKeyPreview: smsKey ? `${smsKey.slice(0, 4)}••••${smsKey.slice(-4)}` : "",
+            contactTemplate: getSetting("sms_contact_template") || DEFAULT_CONTACT_SMS_TEMPLATE,
+            newsletterTemplate: getSetting("sms_newsletter_template") || DEFAULT_NEWSLETTER_SMS_TEMPLATE,
+          }}
+        />
+      </div>
     </div>
   );
 }

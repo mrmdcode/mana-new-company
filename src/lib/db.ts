@@ -16,10 +16,11 @@ declare global {
 function createConnection() {
   fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
   const connection = new Database(DB_PATH);
+  // Next.js build/dev spins up several worker processes that open this file
+  // concurrently; this must be set before any other statement (including the
+  // journal_mode switch below) so contended writes wait instead of throwing.
+  connection.pragma("busy_timeout = 10000");
   connection.pragma("journal_mode = WAL");
-  // Next.js build/dev spins up several worker processes that open this
-  // file concurrently; wait for the writer lock instead of throwing.
-  connection.pragma("busy_timeout = 5000");
   return connection;
 }
 

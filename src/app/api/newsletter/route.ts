@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { createSubscriber } from "@/lib/db";
+import { createSubscriber, getSetting } from "@/lib/db";
+import { sendSms } from "@/lib/kavenegar";
+import { DEFAULT_NEWSLETTER_SMS_TEMPLATE } from "@/data/sms-templates";
 
 const PHONE_PATTERN = /^0?9\d{9}$/;
 
@@ -16,6 +18,16 @@ export async function POST(request: Request) {
 
   if (!result.ok) {
     return NextResponse.json({ error: "این شماره قبلاً در خبرنامه عضو شده است." }, { status: 409 });
+  }
+
+  const kavenegarKey = getSetting("kavenegar_api_key");
+  if (kavenegarKey) {
+    const template = getSetting("sms_newsletter_template") || DEFAULT_NEWSLETTER_SMS_TEMPLATE;
+    try {
+      await sendSms(kavenegarKey, normalized, template);
+    } catch (error) {
+      console.error("ارسال پیامک خوش‌آمدگویی خبرنامه ناموفق بود:", error);
+    }
   }
 
   return NextResponse.json({ success: true }, { status: 201 });

@@ -119,6 +119,7 @@ export default function Footer({ logoUrl }: { logoUrl?: string | null }) {
                   rel="noopener noreferrer"
                   href="https://trustseal.enamad.ir/?id=609043&Code=xk32E9Ch2RWXftT7C8m2iT4TcvTxv6U5"
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- external eNamad badge, not an optimizable local asset */}
                   <img
                     referrerPolicy="origin"
                     src="https://trustseal.enamad.ir/logo.aspx?id=609043&Code=xk32E9Ch2RWXftT7C8m2iT4TcvTxv6U5"
