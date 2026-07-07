@@ -1,0 +1,15 @@
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - ADMIN_DEFAULT_PASSWORD=${ADMIN_DEFAULT_PASSWORD:-}
+      - ADMIN_SESSION_SECRET=${ADMIN_SESSION_SECRET:-}
+      - BLOG_API_URL=${BLOG_API_URL:-}
+    volumes:
+      - app-data:/app/data
+
+volumes:
+  app-data:
