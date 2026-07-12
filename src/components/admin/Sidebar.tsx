@@ -3,8 +3,11 @@
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
+  CreditCard,
+  Globe,
   Images,
   LayoutDashboard,
+  ListChecks,
   LogOut,
   Mail,
   Megaphone,
@@ -20,6 +23,9 @@ const navItems = [
   { href: "/admin/news", label: "اخبار", icon: Newspaper },
   { href: "/admin/newsletter", label: "مشترکین خبرنامه", icon: Megaphone },
   { href: "/admin/messages", label: "پیام‌های تماس", icon: Mail },
+  { href: "/admin/domains", label: "دامنه‌ها", icon: Globe },
+  { href: "/admin/gateways", label: "درگاه‌ها", icon: CreditCard },
+  { href: "/admin/transactions", label: "تراکنش‌ها", icon: ListChecks },
   { href: "/admin/settings", label: "تنظیمات", icon: Settings },
 ];
 

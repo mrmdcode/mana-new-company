@@ -72,6 +72,38 @@ db.exec(`
     forwarded_to_bale INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS merchant_domains (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    domain TEXT NOT NULL,
+    merchant_id TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS payment_gateways (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    domain_id INTEGER NOT NULL REFERENCES merchant_domains(id),
+    card_number TEXT NOT NULL,
+    card_holder_name TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS gateway_transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    gateway_id INTEGER NOT NULL REFERENCES payment_gateways(id),
+    authority TEXT NOT NULL UNIQUE,
+    amount INTEGER NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    mobile TEXT NOT NULL DEFAULT '',
+    callback_url TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    tracking_note TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    decided_at TEXT
+  );
 `);
 
 function seedIfEmpty() {
@@ -339,4 +371,184 @@ export function markMessageForwarded(id: number): void {
 
 export function deleteMessage(id: number): void {
   db.prepare("DELETE FROM contact_messages WHERE id = ?").run(id);
+}
+
+// --- Merchant domains ---
+
+export type MerchantDomainRow = {
+  id: number;
+  name: string;
+  domain: string;
+  merchant_id: string;
+  status: "active" | "inactive";
+  created_at: string;
+};
+
+export function listDomains(): MerchantDomainRow[] {
+  return db.prepare("SELECT * FROM merchant_domains ORDER BY id DESC").all() as MerchantDomainRow[];
+}
+
+export function getDomainByMerchantId(merchantId: string): MerchantDomainRow | undefined {
+  return db.prepare("SELECT * FROM merchant_domains WHERE merchant_id = ?").get(merchantId) as
+    | MerchantDomainRow
+    | undefined;
+}
+
+export function createDomain(data: { name: string; domain: string }): MerchantDomainRow {
+  const merchantId = crypto.randomUUID();
+  const result = db
+    .prepare("INSERT INTO merchant_domains (name, domain, merchant_id) VALUES (@name, @domain, @merchant_id)")
+    .run({ ...data, merchant_id: merchantId });
+  return db.prepare("SELECT * FROM merchant_domains WHERE id = ?").get(result.lastInsertRowid) as MerchantDomainRow;
+}
+
+export function updateDomain(
+  id: number,
+  data: { name: string; domain: string; status: "active" | "inactive" }
+): MerchantDomainRow | undefined {
+  db.prepare("UPDATE merchant_domains SET name = @name, domain = @domain, status = @status WHERE id = @id").run({
+    ...data,
+    id,
+  });
+  return db.prepare("SELECT * FROM merchant_domains WHERE id = ?").get(id) as MerchantDomainRow | undefined;
+}
+
+export function deleteDomain(id: number): void {
+  db.prepare("DELETE FROM merchant_domains WHERE id = ?").run(id);
+}
+
+// --- Payment gateways ---
+
+export type PaymentGatewayRow = {
+  id: number;
+  domain_id: number;
+  card_number: string;
+  card_holder_name: string;
+  status: "active" | "inactive";
+  created_at: string;
+};
+
+export type PaymentGatewayWithDomainRow = PaymentGatewayRow & {
+  domain_name: string;
+  domain: string;
+  merchant_id: string;
+};
+
+const gatewayWithDomainQuery = `
+  SELECT g.*, d.name AS domain_name, d.domain AS domain, d.merchant_id AS merchant_id
+  FROM payment_gateways g
+  JOIN merchant_domains d ON d.id = g.domain_id
+`;
+
+export function listGateways(): PaymentGatewayWithDomainRow[] {
+  return db.prepare(`${gatewayWithDomainQuery} ORDER BY g.id DESC`).all() as PaymentGatewayWithDomainRow[];
+}
+
+export function getActiveGatewayByMerchantId(merchantId: string): PaymentGatewayWithDomainRow | undefined {
+  return db
+    .prepare(`${gatewayWithDomainQuery} WHERE d.merchant_id = ? AND g.status = 'active' AND d.status = 'active'`)
+    .get(merchantId) as PaymentGatewayWithDomainRow | undefined;
+}
+
+export function createGateway(data: {
+  domain_id: number;
+  card_number: string;
+  card_holder_name: string;
+}): PaymentGatewayRow {
+  const result = db
+    .prepare(
+      "INSERT INTO payment_gateways (domain_id, card_number, card_holder_name) VALUES (@domain_id, @card_number, @card_holder_name)"
+    )
+    .run(data);
+  return db.prepare("SELECT * FROM payment_gateways WHERE id = ?").get(result.lastInsertRowid) as PaymentGatewayRow;
+}
+
+export function updateGateway(
+  id: number,
+  data: { domain_id: number; card_number: string; card_holder_name: string; status: "active" | "inactive" }
+): PaymentGatewayRow | undefined {
+  db.prepare(
+    "UPDATE payment_gateways SET domain_id = @domain_id, card_number = @card_number, card_holder_name = @card_holder_name, status = @status WHERE id = @id"
+  ).run({ ...data, id });
+  return db.prepare("SELECT * FROM payment_gateways WHERE id = ?").get(id) as PaymentGatewayRow | undefined;
+}
+
+export function deleteGateway(id: number): void {
+  db.prepare("DELETE FROM payment_gateways WHERE id = ?").run(id);
+}
+
+// --- Gateway transactions ---
+
+export type TransactionStatus = "pending" | "confirmed" | "rejected";
+
+export type GatewayTransactionRow = {
+  id: number;
+  gateway_id: number;
+  authority: string;
+  amount: number;
+  description: string;
+  mobile: string;
+  callback_url: string;
+  status: TransactionStatus;
+  tracking_note: string;
+  created_at: string;
+  decided_at: string | null;
+};
+
+export type TransactionWithGatewayRow = GatewayTransactionRow & {
+  card_number: string;
+  card_holder_name: string;
+  domain_name: string;
+  merchant_id: string;
+};
+
+const transactionWithGatewayQuery = `
+  SELECT t.*, g.card_number AS card_number, g.card_holder_name AS card_holder_name,
+         d.name AS domain_name, d.merchant_id AS merchant_id
+  FROM gateway_transactions t
+  JOIN payment_gateways g ON g.id = t.gateway_id
+  JOIN merchant_domains d ON d.id = g.domain_id
+`;
+
+export function listTransactions(): TransactionWithGatewayRow[] {
+  return db.prepare(`${transactionWithGatewayQuery} ORDER BY t.id DESC`).all() as TransactionWithGatewayRow[];
+}
+
+export function getTransactionByAuthority(authority: string): TransactionWithGatewayRow | undefined {
+  return db.prepare(`${transactionWithGatewayQuery} WHERE t.authority = ?`).get(authority) as
+    | TransactionWithGatewayRow
+    | undefined;
+}
+
+export function createTransaction(data: {
+  gateway_id: number;
+  amount: number;
+  description: string;
+  mobile: string;
+  callback_url: string;
+}): GatewayTransactionRow {
+  const authority = crypto.randomUUID();
+  const result = db
+    .prepare(
+      "INSERT INTO gateway_transactions (gateway_id, authority, amount, description, mobile, callback_url) VALUES (@gateway_id, @authority, @amount, @description, @mobile, @callback_url)"
+    )
+    .run({ ...data, authority });
+  return db.prepare("SELECT * FROM gateway_transactions WHERE id = ?").get(result.lastInsertRowid) as GatewayTransactionRow;
+}
+
+export function setTransactionTrackingNote(authority: string, trackingNote: string): void {
+  db.prepare("UPDATE gateway_transactions SET tracking_note = ? WHERE authority = ? AND status = 'pending'").run(
+    trackingNote,
+    authority
+  );
+}
+
+export function decideTransaction(
+  id: number,
+  status: "confirmed" | "rejected"
+): TransactionWithGatewayRow | undefined {
+  db.prepare(
+    "UPDATE gateway_transactions SET status = @status, decided_at = datetime('now') WHERE id = @id AND status = 'pending'"
+  ).run({ id, status });
+  return db.prepare(`${transactionWithGatewayQuery} WHERE t.id = ?`).get(id) as TransactionWithGatewayRow | undefined;
 }
