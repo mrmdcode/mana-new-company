@@ -19,7 +19,7 @@ export default function TransactionsTable({ initialItems }: { initialItems: Tran
         <thead className="bg-slate-50 text-slate-600 dark:bg-white/5 dark:text-slate-300">
           <tr>
             <th className="px-4 py-3 text-start font-semibold">کسب‌وکار</th>
-            <th className="px-4 py-3 text-start font-semibold">مبلغ (ریال)</th>
+            <th className="px-4 py-3 text-start font-semibold">مبلغ (تومان)</th>
             <th className="px-4 py-3 text-start font-semibold">توضیحات</th>
             <th className="px-4 py-3 text-start font-semibold">کد رهگیری زرین‌پال</th>
             <th className="px-4 py-3 text-start font-semibold">وضعیت</th>

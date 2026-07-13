@@ -45,6 +45,7 @@ export async function zarinpalRequestPayment(params: {
     {
       merchant_id: params.merchantId,
       amount: params.amount,
+      currency: "IRT",
       description: params.description,
       callback_url: params.callbackUrl,
       metadata: params.mobile ? { mobile: params.mobile } : undefined,

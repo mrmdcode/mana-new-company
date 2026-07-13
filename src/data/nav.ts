@@ -32,6 +32,7 @@ export const footerLinkColumns: { title: string; links: NavLink[] }[] = [
       { href: "/#news", label: "اخبار و رویدادها" },
       { href: "/#partners", label: "همکاران ما" },
       { href: "/#hero", label: "درباره ما" },
+      { href: "/docs/gateway", label: "مستندات API درگاه پرداخت" },
     ],
   },
   {

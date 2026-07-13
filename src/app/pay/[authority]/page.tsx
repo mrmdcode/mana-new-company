@@ -42,7 +42,7 @@ export default async function PayPage({ params }: { params: Promise<{ authority:
           {statusLabel[transaction.status]}
         </h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-          {transaction.amount.toLocaleString("fa-IR")} ریال
+          {transaction.amount.toLocaleString("fa-IR")} تومان
         </p>
 
         <a
