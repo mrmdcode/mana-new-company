@@ -39,6 +39,11 @@ function createConnection() {
   // journal_mode switch below) so contended writes wait instead of throwing.
   connection.pragma("busy_timeout = 10000");
   connection.pragma("journal_mode = WAL");
+  // None of the CRUD functions below guard against orphaned references
+  // (e.g. deleting a domain that still has gateways/transactions pointing
+  // at it), so enforcement must stay off — otherwise those deletes, and
+  // the schema-rebuild migration below, throw FOREIGN KEY constraint errors.
+  connection.pragma("foreign_keys = OFF");
   return connection;
 }
 
@@ -124,6 +129,61 @@ withBusyRetry(() =>
   );
 `)
 );
+
+// Tables created by an earlier deploy (card-to-card era) still have the old
+// columns on disk — CREATE TABLE IF NOT EXISTS never alters an existing
+// table, so those columns/types would otherwise stick around forever and
+// break inserts/updates written against the current schema.
+function columnExists(table: string, column: string): boolean {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  return columns.some((c) => c.name === column);
+}
+
+function migrateLegacyGatewayTables(): void {
+  if (columnExists("payment_gateways", "card_number")) {
+    db.exec(`
+      CREATE TABLE payment_gateways_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        domain_id INTEGER NOT NULL REFERENCES merchant_domains(id),
+        status TEXT NOT NULL DEFAULT 'active',
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO payment_gateways_new (id, domain_id, status, created_at)
+        SELECT id, domain_id, status, created_at FROM payment_gateways;
+      DROP TABLE payment_gateways;
+      ALTER TABLE payment_gateways_new RENAME TO payment_gateways;
+    `);
+  }
+
+  if (columnExists("gateway_transactions", "tracking_note") || !columnExists("gateway_transactions", "ref_id")) {
+    db.exec(`
+      CREATE TABLE gateway_transactions_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        gateway_id INTEGER NOT NULL REFERENCES payment_gateways(id),
+        authority TEXT NOT NULL UNIQUE,
+        amount INTEGER NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        mobile TEXT NOT NULL DEFAULT '',
+        callback_url TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        ref_id TEXT,
+        card_pan TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        verified_at TEXT
+      );
+      INSERT INTO gateway_transactions_new
+        (id, gateway_id, authority, amount, description, mobile, callback_url, status, created_at)
+        SELECT id, gateway_id, authority, amount, description, mobile, callback_url,
+               CASE status WHEN 'confirmed' THEN 'paid' WHEN 'rejected' THEN 'failed' ELSE status END,
+               created_at
+        FROM gateway_transactions;
+      DROP TABLE gateway_transactions;
+      ALTER TABLE gateway_transactions_new RENAME TO gateway_transactions;
+    `);
+  }
+}
+
+withBusyRetry(migrateLegacyGatewayTables);
 
 function seedIfEmpty() {
   const portfolioCount = db.prepare("SELECT COUNT(*) AS c FROM portfolio_items").get() as { c: number };
