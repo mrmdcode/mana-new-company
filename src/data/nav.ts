@@ -22,6 +22,8 @@ export const footerLinkColumns: { title: string; links: NavLink[] }[] = [
       { href: "/#scenarios", label: "حوزه‌های فعالیت" },
       { href: "/#roadmap", label: "فرآیند همکاری" },
       { href: "/#portfolio", label: "نمونه‌کارها" },
+      { href: "https://shoperow.com", label: "shoperow.com" },
+      { href: "https://nfc.asrarnahan.ir", label: "nfc.asrarnahan.ir" },
     ],
   },
   {

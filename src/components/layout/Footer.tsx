@@ -67,16 +67,24 @@ export default function Footer({ logoUrl }: { logoUrl?: string | null }) {
               {col.title}
             </h3>
             <ul className="mt-4 space-y-2.5">
-              {col.links.map((link) => (
-                <li key={`${col.title}-${link.label}`}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-slate-600 transition hover:text-teal-700 dark:text-slate-400 dark:hover:text-teal-400"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+              {col.links.map((link) => {
+                const isExternal = link.href.startsWith("http");
+                const linkClassName =
+                  "text-sm text-slate-600 transition hover:text-teal-700 dark:text-slate-400 dark:hover:text-teal-400";
+                return (
+                  <li key={`${col.title}-${link.label}`}>
+                    {isExternal ? (
+                      <a href={link.href} target="_blank" rel="noopener noreferrer" className={linkClassName}>
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link href={link.href} className={linkClassName}>
+                        {link.label}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         ))}
