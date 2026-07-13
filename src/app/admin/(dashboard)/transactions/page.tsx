@@ -9,7 +9,7 @@ export default function AdminTransactionsPage() {
     <div>
       <AdminPageHeader
         title="تراکنش‌ها"
-        description="پرداخت‌های کارت‌به‌کارت در انتظار بررسی. پس از چک کردن واریزی در حساب بانکی خودتان، پرداخت را تایید یا رد کنید."
+        description="سوابق پرداخت‌های واقعی که از طریق زرین‌پال انجام شده‌اند. تایید هر تراکنش خودکار و توسط زرین‌پال انجام می‌شود."
       />
       <TransactionsTable initialItems={items} />
     </div>

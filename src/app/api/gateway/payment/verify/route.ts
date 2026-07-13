@@ -19,6 +19,6 @@ export async function POST(request: Request) {
     status: transaction.status,
     amount: transaction.amount,
     authority: transaction.authority,
-    ref_id: transaction.status === "confirmed" ? transaction.id : null,
+    ref_id: transaction.ref_id,
   });
 }

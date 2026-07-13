@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createTransaction, getActiveGatewayByMerchantId } from "@/lib/db";
+import { createTransaction, getActiveGatewayByMerchantId, getZarinpalConfig } from "@/lib/db";
+import { zarinpalRequestPayment } from "@/lib/zarinpal";
 import { siteConfig } from "@/data/site";
 
 export async function POST(request: Request) {
@@ -23,18 +24,44 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "درگاهی برای این merchant_id یافت نشد یا فعال نیست." }, { status: 404 });
   }
 
-  const transaction = createTransaction({
+  const zarinpal = getZarinpalConfig();
+  if (!zarinpal.merchantId) {
+    return NextResponse.json({ error: "درگاه زرین‌پال هنوز در تنظیمات پنل مدیریت پیکربندی نشده است." }, { status: 500 });
+  }
+
+  const description = typeof body?.description === "string" ? body.description : "پرداخت";
+  const mobile = typeof body?.mobile === "string" ? body.mobile : undefined;
+
+  let zarinpalResult;
+  try {
+    zarinpalResult = await zarinpalRequestPayment({
+      merchantId: zarinpal.merchantId,
+      sandbox: zarinpal.sandbox,
+      amount,
+      description,
+      mobile,
+      callbackUrl: `${siteConfig.url}/api/gateway/payment/zarinpal-callback`,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "اتصال به زرین‌پال ناموفق بود." },
+      { status: 502 }
+    );
+  }
+
+  createTransaction({
     gateway_id: gateway.id,
+    authority: zarinpalResult.authority,
     amount,
-    description: typeof body?.description === "string" ? body.description : "",
-    mobile: typeof body?.mobile === "string" ? body.mobile : "",
+    description,
+    mobile: mobile ?? "",
     callback_url: callbackUrl,
   });
 
   return NextResponse.json(
     {
-      authority: transaction.authority,
-      pay_url: `${siteConfig.url}/pay/${transaction.authority}`,
+      authority: zarinpalResult.authority,
+      pay_url: `${siteConfig.url}/pay/${zarinpalResult.authority}`,
     },
     { status: 201 }
   );

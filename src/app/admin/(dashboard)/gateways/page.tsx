@@ -10,7 +10,7 @@ export default function AdminGatewaysPage() {
     <div>
       <AdminPageHeader
         title="درگاه‌ها"
-        description="ثبت merchantID یک دامنه بعنوان درگاه پرداخت کارت‌به‌کارت."
+        description="فعال کردن merchantID یک دامنه بعنوان درگاه پرداخت. تمام درگاه‌های فعال از حساب زرین‌پال شما (تنظیمات) برای پرداخت واقعی استفاده می‌کنند."
       />
 
       <EntityManager<PaymentGatewayWithDomainRow>
@@ -21,8 +21,6 @@ export default function AdminGatewaysPage() {
         columns={[
           { key: "domain_name", label: "کسب‌وکار" },
           { key: "merchant_id", label: "merchantID" },
-          { key: "card_number", label: "شماره کارت" },
-          { key: "card_holder_name", label: "صاحب کارت" },
           { key: "status", label: "وضعیت" },
         ]}
         fields={[
@@ -32,8 +30,6 @@ export default function AdminGatewaysPage() {
             type: "select",
             options: domains.map((d) => ({ value: String(d.id), label: `${d.name} — ${d.merchant_id}` })),
           },
-          { name: "card_number", label: "شماره کارت", type: "text" },
-          { name: "card_holder_name", label: "نام صاحب کارت", type: "text" },
           {
             name: "status",
             label: "وضعیت",

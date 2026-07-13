@@ -2,12 +2,14 @@ import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import SettingsForm from "@/components/admin/SettingsForm";
 import LogoUploadForm from "@/components/admin/LogoUploadForm";
 import SmsSettingsForm from "@/components/admin/SmsSettingsForm";
-import { getKavenegarConfig, getSetting, getSiteLogo } from "@/lib/db";
+import ZarinpalSettingsForm from "@/components/admin/ZarinpalSettingsForm";
+import { getKavenegarConfig, getSetting, getSiteLogo, getZarinpalConfig } from "@/lib/db";
 import { DEFAULT_CONTACT_SMS_TEMPLATE, DEFAULT_NEWSLETTER_SMS_TEMPLATE } from "@/data/sms-templates";
 
 export default function AdminSettingsPage() {
   const token = getSetting("bale_bot_token") ?? "";
   const { apiKey: smsKey, sender: smsSender, apiKeySource } = getKavenegarConfig();
+  const { merchantId: zarinpalMerchantId, sandbox: zarinpalSandbox } = getZarinpalConfig();
 
   return (
     <div>
@@ -37,6 +39,18 @@ export default function AdminSettingsPage() {
             sender: smsSender ?? "",
             contactTemplate: getSetting("sms_contact_template") || DEFAULT_CONTACT_SMS_TEMPLATE,
             newsletterTemplate: getSetting("sms_newsletter_template") || DEFAULT_NEWSLETTER_SMS_TEMPLATE,
+          }}
+        />
+      </div>
+
+      <div className="mt-6">
+        <ZarinpalSettingsForm
+          initialSettings={{
+            merchantIdSet: Boolean(zarinpalMerchantId),
+            merchantIdPreview: zarinpalMerchantId
+              ? `${zarinpalMerchantId.slice(0, 6)}••••${zarinpalMerchantId.slice(-4)}`
+              : "",
+            sandbox: zarinpalSandbox,
           }}
         />
       </div>

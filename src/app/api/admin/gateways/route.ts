@@ -15,14 +15,10 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => null);
   const domainId = Number(body?.domain_id);
-  if (!domainId || !body?.card_number?.trim() || !body?.card_holder_name?.trim()) {
-    return NextResponse.json({ error: "دامنه، شماره کارت و نام صاحب کارت الزامی است." }, { status: 400 });
+  if (!domainId) {
+    return NextResponse.json({ error: "انتخاب دامنه الزامی است." }, { status: 400 });
   }
 
-  const item = createGateway({
-    domain_id: domainId,
-    card_number: body.card_number,
-    card_holder_name: body.card_holder_name,
-  });
+  const item = createGateway({ domain_id: domainId });
   return NextResponse.json({ item }, { status: 201 });
 }

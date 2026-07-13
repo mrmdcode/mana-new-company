@@ -9,17 +9,12 @@ export async function PUT(request: Request, ctx: RouteContext<"/api/admin/gatewa
   const { id } = await ctx.params;
   const body = await request.json().catch(() => null);
   const domainId = Number(body?.domain_id);
-  if (!domainId || !body?.card_number?.trim() || !body?.card_holder_name?.trim()) {
-    return NextResponse.json({ error: "دامنه، شماره کارت و نام صاحب کارت الزامی است." }, { status: 400 });
+  if (!domainId) {
+    return NextResponse.json({ error: "انتخاب دامنه الزامی است." }, { status: 400 });
   }
   const status = body.status === "inactive" ? "inactive" : "active";
 
-  const item = updateGateway(Number(id), {
-    domain_id: domainId,
-    card_number: body.card_number,
-    card_holder_name: body.card_holder_name,
-    status,
-  });
+  const item = updateGateway(Number(id), { domain_id: domainId, status });
   if (!item) {
     return NextResponse.json({ error: "درگاه یافت نشد." }, { status: 404 });
   }

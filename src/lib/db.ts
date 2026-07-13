@@ -104,8 +104,6 @@ withBusyRetry(() =>
   CREATE TABLE IF NOT EXISTS payment_gateways (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     domain_id INTEGER NOT NULL REFERENCES merchant_domains(id),
-    card_number TEXT NOT NULL,
-    card_holder_name TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'active',
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
@@ -119,9 +117,10 @@ withBusyRetry(() =>
     mobile TEXT NOT NULL DEFAULT '',
     callback_url TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
-    tracking_note TEXT NOT NULL DEFAULT '',
+    ref_id TEXT,
+    card_pan TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
-    decided_at TEXT
+    verified_at TEXT
   );
 `)
 );
@@ -203,6 +202,25 @@ export function getKavenegarConfig(): KavenegarConfig {
     sender: getSetting("kavenegar_sender") || process.env.KAVENEGAR_SENDER || undefined,
     apiKeySource: dbKey ? "settings" : envKey ? "env" : "none",
   };
+}
+
+export type ZarinpalConfig = {
+  merchantId?: string;
+  sandbox: boolean;
+};
+
+export function getZarinpalConfig(): ZarinpalConfig {
+  return {
+    merchantId: getSetting("zarinpal_merchant_id") || undefined,
+    sandbox: getSetting("zarinpal_sandbox") !== "0",
+  };
+}
+
+export function setZarinpalConfig(data: { merchantId?: string; sandbox: boolean }): void {
+  if (typeof data.merchantId === "string" && data.merchantId.trim()) {
+    setSetting("zarinpal_merchant_id", data.merchantId.trim());
+  }
+  setSetting("zarinpal_sandbox", data.sandbox ? "1" : "0");
 }
 
 export function getOrCreateAdminPasswordHash(): string {
@@ -442,8 +460,6 @@ export function deleteDomain(id: number): void {
 export type PaymentGatewayRow = {
   id: number;
   domain_id: number;
-  card_number: string;
-  card_holder_name: string;
   status: "active" | "inactive";
   created_at: string;
 };
@@ -470,26 +486,19 @@ export function getActiveGatewayByMerchantId(merchantId: string): PaymentGateway
     .get(merchantId) as PaymentGatewayWithDomainRow | undefined;
 }
 
-export function createGateway(data: {
-  domain_id: number;
-  card_number: string;
-  card_holder_name: string;
-}): PaymentGatewayRow {
-  const result = db
-    .prepare(
-      "INSERT INTO payment_gateways (domain_id, card_number, card_holder_name) VALUES (@domain_id, @card_number, @card_holder_name)"
-    )
-    .run(data);
+export function createGateway(data: { domain_id: number }): PaymentGatewayRow {
+  const result = db.prepare("INSERT INTO payment_gateways (domain_id) VALUES (@domain_id)").run(data);
   return db.prepare("SELECT * FROM payment_gateways WHERE id = ?").get(result.lastInsertRowid) as PaymentGatewayRow;
 }
 
 export function updateGateway(
   id: number,
-  data: { domain_id: number; card_number: string; card_holder_name: string; status: "active" | "inactive" }
+  data: { domain_id: number; status: "active" | "inactive" }
 ): PaymentGatewayRow | undefined {
-  db.prepare(
-    "UPDATE payment_gateways SET domain_id = @domain_id, card_number = @card_number, card_holder_name = @card_holder_name, status = @status WHERE id = @id"
-  ).run({ ...data, id });
+  db.prepare("UPDATE payment_gateways SET domain_id = @domain_id, status = @status WHERE id = @id").run({
+    ...data,
+    id,
+  });
   return db.prepare("SELECT * FROM payment_gateways WHERE id = ?").get(id) as PaymentGatewayRow | undefined;
 }
 
@@ -499,7 +508,7 @@ export function deleteGateway(id: number): void {
 
 // --- Gateway transactions ---
 
-export type TransactionStatus = "pending" | "confirmed" | "rejected";
+export type TransactionStatus = "pending" | "paid" | "failed";
 
 export type GatewayTransactionRow = {
   id: number;
@@ -510,21 +519,19 @@ export type GatewayTransactionRow = {
   mobile: string;
   callback_url: string;
   status: TransactionStatus;
-  tracking_note: string;
+  ref_id: string | null;
+  card_pan: string | null;
   created_at: string;
-  decided_at: string | null;
+  verified_at: string | null;
 };
 
 export type TransactionWithGatewayRow = GatewayTransactionRow & {
-  card_number: string;
-  card_holder_name: string;
   domain_name: string;
   merchant_id: string;
 };
 
 const transactionWithGatewayQuery = `
-  SELECT t.*, g.card_number AS card_number, g.card_holder_name AS card_holder_name,
-         d.name AS domain_name, d.merchant_id AS merchant_id
+  SELECT t.*, d.name AS domain_name, d.merchant_id AS merchant_id
   FROM gateway_transactions t
   JOIN payment_gateways g ON g.id = t.gateway_id
   JOIN merchant_domains d ON d.id = g.domain_id
@@ -542,33 +549,33 @@ export function getTransactionByAuthority(authority: string): TransactionWithGat
 
 export function createTransaction(data: {
   gateway_id: number;
+  authority: string;
   amount: number;
   description: string;
   mobile: string;
   callback_url: string;
 }): GatewayTransactionRow {
-  const authority = crypto.randomUUID();
   const result = db
     .prepare(
       "INSERT INTO gateway_transactions (gateway_id, authority, amount, description, mobile, callback_url) VALUES (@gateway_id, @authority, @amount, @description, @mobile, @callback_url)"
     )
-    .run({ ...data, authority });
+    .run(data);
   return db.prepare("SELECT * FROM gateway_transactions WHERE id = ?").get(result.lastInsertRowid) as GatewayTransactionRow;
 }
 
-export function setTransactionTrackingNote(authority: string, trackingNote: string): void {
-  db.prepare("UPDATE gateway_transactions SET tracking_note = ? WHERE authority = ? AND status = 'pending'").run(
-    trackingNote,
-    authority
-  );
-}
-
-export function decideTransaction(
-  id: number,
-  status: "confirmed" | "rejected"
+export function markTransactionResult(
+  authority: string,
+  data: { status: "paid" | "failed"; refId?: string; cardPan?: string }
 ): TransactionWithGatewayRow | undefined {
   db.prepare(
-    "UPDATE gateway_transactions SET status = @status, decided_at = datetime('now') WHERE id = @id AND status = 'pending'"
-  ).run({ id, status });
-  return db.prepare(`${transactionWithGatewayQuery} WHERE t.id = ?`).get(id) as TransactionWithGatewayRow | undefined;
+    "UPDATE gateway_transactions SET status = @status, ref_id = @refId, card_pan = @cardPan, verified_at = datetime('now') WHERE authority = @authority AND status = 'pending'"
+  ).run({
+    authority,
+    status: data.status,
+    refId: data.refId ?? null,
+    cardPan: data.cardPan ?? null,
+  });
+  return db.prepare(`${transactionWithGatewayQuery} WHERE t.authority = ?`).get(authority) as
+    | TransactionWithGatewayRow
+    | undefined;
 }
