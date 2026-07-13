@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createTransaction, getActiveGatewayByMerchantId } from "@/lib/db";
+import { siteConfig } from "@/data/site";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -30,11 +31,10 @@ export async function POST(request: Request) {
     callback_url: callbackUrl,
   });
 
-  const origin = new URL(request.url).origin;
   return NextResponse.json(
     {
       authority: transaction.authority,
-      pay_url: `${origin}/pay/${transaction.authority}`,
+      pay_url: `${siteConfig.url}/pay/${transaction.authority}`,
     },
     { status: 201 }
   );
