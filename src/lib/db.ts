@@ -13,6 +13,24 @@ declare global {
   var __appDb: Database.Database | undefined;
 }
 
+// better-sqlite3's busy_timeout only covers waiting for an already-open
+// connection's lock; it does not cover the brief window where multiple
+// Next.js build workers race to create the file and switch journal modes
+// for the first time. Retry those specific operations on top of it.
+function withBusyRetry<T>(fn: () => T): T {
+  const maxAttempts = 30;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return fn();
+    } catch (error) {
+      const isBusy = error instanceof Error && /SQLITE_BUSY|database is locked/i.test(error.message);
+      if (!isBusy || attempt === maxAttempts) throw error;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 300);
+    }
+  }
+  throw new Error("unreachable");
+}
+
 function createConnection() {
   fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
   const connection = new Database(DB_PATH);
@@ -24,10 +42,11 @@ function createConnection() {
   return connection;
 }
 
-const db = globalThis.__appDb ?? createConnection();
+const db = globalThis.__appDb ?? withBusyRetry(createConnection);
 globalThis.__appDb = db;
 
-db.exec(`
+withBusyRetry(() =>
+  db.exec(`
   CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
@@ -104,7 +123,8 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     decided_at TEXT
   );
-`);
+`)
+);
 
 function seedIfEmpty() {
   const portfolioCount = db.prepare("SELECT COUNT(*) AS c FROM portfolio_items").get() as { c: number };
@@ -137,7 +157,7 @@ function seedIfEmpty() {
   }
 }
 
-seedIfEmpty();
+withBusyRetry(seedIfEmpty);
 
 // --- Settings ---
 
