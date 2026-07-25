@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Vazirmatn } from "next/font/google";
 import { siteConfig } from "@/data/site";
 import "./globals.css";
@@ -52,6 +52,16 @@ export const metadata: Metadata = {
       follow: true,
     },
   },
+  ...(process.env.GOOGLE_SITE_VERIFICATION && {
+    verification: { google: process.env.GOOGLE_SITE_VERIFICATION },
+  }),
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: siteConfig.themeColor },
+    { media: "(prefers-color-scheme: dark)", color: "#05070d" },
+  ],
 };
 
 export default function RootLayout({
@@ -64,14 +74,14 @@ export default function RootLayout({
     "@type": "Organization",
     name: siteConfig.name,
     url: siteConfig.url,
+    logo: `${siteConfig.url}/icon.svg`,
     description: siteConfig.description,
     telephone: siteConfig.contact.phone,
     email: siteConfig.contact.email,
     address: {
       "@type": "PostalAddress",
-      addressLocality: "تهران",
-      addressCountry: "IR",
       streetAddress: siteConfig.contact.address,
+      addressCountry: "IR",
     },
     sameAs: Object.values(siteConfig.social),
   };

@@ -15,6 +15,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# متادیتای استاتیک (مثل تگ تأیید مالکیت گوگل) در زمان build ساخته می‌شود، پس این
+# مقدار باید هنگام «ساخت» ایمیج پاس داده شود، نه فقط در env زمان اجرا
+ARG GOOGLE_SITE_VERIFICATION
+ENV GOOGLE_SITE_VERIFICATION=$GOOGLE_SITE_VERIFICATION
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
