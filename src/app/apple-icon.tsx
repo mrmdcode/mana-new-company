@@ -1,9 +1,18 @@
 import { ImageResponse } from "next/og";
+import { getSiteLogo } from "@/lib/db";
+import { parseDataUrl } from "@/lib/data-url";
 
 export const size = { width: 180, height: 180 };
-export const contentType = "image/png";
+export const dynamic = "force-dynamic";
 
 export default function AppleIcon() {
+  const logo = getSiteLogo();
+  const blob = logo ? parseDataUrl(logo) : null;
+
+  if (blob) {
+    return new Response(blob, { headers: { "Cache-Control": "no-store" } });
+  }
+
   return new ImageResponse(
     (
       <div
