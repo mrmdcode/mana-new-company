@@ -9,6 +9,7 @@ export const mainNav: NavLink[] = [
   { href: "/#scenarios", label: "حوزه‌های فعالیت" },
   { href: "/#roadmap", label: "روند کار" },
   { href: "/#portfolio", label: "نمونه‌کارها" },
+  { href: "https://shop.asrarnahan.ir", label: "فروشگاه" },
   { href: "/blog", label: "وبلاگ" },
   { href: "/contact", label: "تماس با ما" },
 ];
