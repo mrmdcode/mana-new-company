@@ -1,25 +1,15 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { siteConfig } from "@/data/site";
 
 export const alt = siteConfig.name;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-async function loadVazirmatn(weight: 400 | 700) {
-  const cssUrl = `https://fonts.googleapis.com/css2?family=Vazirmatn:wght@${weight}&display=swap`;
-  const css = await fetch(cssUrl, {
-    headers: {
-      // Google serves woff2 (unsupported by satori) unless the UA looks legacy enough for ttf
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0",
-    },
-  }).then((res) => res.text());
-
-  const match = /url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/.exec(css);
-  if (!match) throw new Error("Vazirmatn font URL not found");
-
-  const fontRes = await fetch(match[1]);
-  return fontRes.arrayBuffer();
+function loadVazirmatn(weight: 400 | 700) {
+  const file = weight === 400 ? "assets/vazirmatn-regular.woff" : "assets/vazirmatn-bold.woff";
+  return readFile(join(process.cwd(), file));
 }
 
 export default async function Image() {
