@@ -23,8 +23,6 @@ export const footerLinkColumns: { title: string; links: NavLink[] }[] = [
       { href: "/#scenarios", label: "حوزه‌های فعالیت" },
       { href: "/#roadmap", label: "فرآیند همکاری" },
       { href: "/#portfolio", label: "نمونه‌کارها" },
-      { href: "https://shoperow.com", label: "shoperow.com" },
-      { href: "https://nfc.asrarnahan.ir", label: "nfc.asrarnahan.ir" },
     ],
   },
   {
@@ -35,6 +33,8 @@ export const footerLinkColumns: { title: string; links: NavLink[] }[] = [
       { href: "/#news", label: "اخبار و رویدادها" },
       { href: "/#partners", label: "همکاران ما" },
       { href: "/#hero", label: "درباره ما" },
+      { href: "https://shoperow.com", label: "شاپروو" },
+      { href: "https://nfc.asrarnahan.ir", label: "کارت ویزیت هوشمند" },
       { href: "/docs/gateway", label: "مستندات API درگاه پرداخت" },
     ],
   },
