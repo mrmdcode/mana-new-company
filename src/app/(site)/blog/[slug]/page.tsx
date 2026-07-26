@@ -25,6 +25,8 @@ export async function generateMetadata({
     return { title: "مقاله یافت نشد" };
   }
 
+  const isoDate = toIsoDate(post.date);
+
   return {
     title: post.title,
     description: post.excerpt,
@@ -34,9 +36,16 @@ export async function generateMetadata({
       description: post.excerpt,
       url: `${siteConfig.url}/blog/${post.slug}`,
       type: "article",
-      publishedTime: post.date,
+      ...(isoDate && { publishedTime: isoDate }),
     },
   };
+}
+
+// post.date is often a Jalali-formatted string with no reliable Gregorian
+// equivalent; only surface it as a real date (OG/JSON-LD) when it parses.
+function toIsoDate(value: string): string | null {
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
 
 export default async function BlogPostPage({
@@ -51,8 +60,26 @@ export default async function BlogPostPage({
     notFound();
   }
 
+  const isoDate = toIsoDate(post.date);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt,
+    articleBody: post.content,
+    keywords: post.tags.join(", "),
+    author: { "@type": "Organization", name: post.author },
+    publisher: { "@type": "Organization", name: siteConfig.name, url: siteConfig.url },
+    mainEntityOfPage: `${siteConfig.url}/blog/${post.slug}`,
+    ...(isoDate && { datePublished: isoDate }),
+  };
+
   return (
     <article className="bg-white dark:bg-slate-950">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className={`h-56 bg-gradient-to-br ${post.gradient} sm:h-72`} />
 
       <Container className="max-w-3xl py-12">
