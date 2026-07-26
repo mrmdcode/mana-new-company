@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getTransactionByAuthority, getZarinpalConfig } from "@/lib/db";
 import { zarinpalStartPayUrl } from "@/lib/zarinpal";
+
+// Per-transaction page: no SEO value, must never be indexed or cached.
+export const metadata: Metadata = {
+  title: "وضعیت پرداخت",
+  robots: { index: false, follow: false },
+};
 
 const statusLabel = {
   paid: "پرداخت با موفقیت انجام شد",

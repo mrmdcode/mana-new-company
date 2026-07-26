@@ -3,10 +3,17 @@ import Container from "@/components/ui/Container";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { siteConfig } from "@/data/site";
 
+const description = "راهنمای فنی اتصال به درگاه پرداخت اسرار نهان برای توسعه‌دهندگان.";
+
 export const metadata: Metadata = {
   title: "مستندات API درگاه پرداخت",
-  description: "راهنمای فنی اتصال به درگاه پرداخت اسرار نهان برای توسعه‌دهندگان.",
+  description,
   alternates: { canonical: "/docs/gateway" },
+  openGraph: {
+    title: `مستندات API درگاه پرداخت | ${siteConfig.name}`,
+    description,
+    url: `${siteConfig.url}/docs/gateway`,
+  },
 };
 
 function CodeBlock({ children }: { children: string }) {

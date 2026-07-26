@@ -24,6 +24,7 @@ export const metadata: Metadata = {
     "صحت سنجی کد ملی",
     "خدمات اشتراکی نرم افزاری",
     "امنیت اطلاعات",
+    "درگاه پرداخت اینترنتی",
     siteConfig.name,
   ],
   authors: [{ name: siteConfig.name, url: siteConfig.url }],
